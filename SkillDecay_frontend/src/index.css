@@ -1,15 +1,26 @@
-@import "tailwindcss";
 
-
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+body, html {
+  @apply min-h-screen bg-gradient-to-br from-black via-gray-900 to-gray-800 text-white;
 }
 
-* {
-  box-sizing: border-box;
+
+.bg-white,
+.bg-gray-50,
+.bg-gray-100,
+.bg-slate-50,
+.bg-slate-100 {
+  background-color: transparent !important;
+}
+
+.text-black {
+  color: #e0e0e0 !important;
+}
+
+.text-white {
+  color: #ffffff !important;
+}
+
+div {
+  background-color: transparent !important;
+  color: inherit;
 }
