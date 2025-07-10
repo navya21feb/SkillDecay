@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Brain, Calendar, TrendingUp, BookOpen, Settings, Bell, Search, User, Clock, Target, Zap, BarChart3, Map, Play, Sun, Moon, Edit, Mail, Phone, MapPin, Award, Camera, Plus, Filter, ChevronRight, Upload, Database, Code, Download, CheckCircle, AlertCircle, XCircle, Github } from 'lucide-react';
+import AvatarGenerator from './components/AvatarGenerator';
 
 // Mock data for demonstration
 const mockData = {
@@ -125,7 +126,14 @@ const Header = ({ user, onSearch, darkMode, toggleDarkMode }) => (
         </button>
         
         <div className="flex items-center gap-3 cursor-pointer">
-          <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full" />
+          <img
+            src={user.avatar || `https://api.dicebear.com/8.x/bottts/svg?seed=${encodeURIComponent(user.name || 'user123')}`}
+            alt={user.name}
+            className="w-8 h-8 rounded-full object-cover"
+            onError={(e) => {
+              e.target.src = `https://api.dicebear.com/8.x/bottts/svg?seed=${encodeURIComponent(user.name || 'user123')}`;
+            }}
+          />
           <div className="text-right">
             <p className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{user.name}</p>
             <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{user.email}</p>
@@ -180,7 +188,7 @@ const Sidebar = ({ activeTab, onTabChange, darkMode }) => {
 };
 
 // Profile Page Component
-const ProfilePage = ({ user, darkMode }) => {
+const ProfilePage = ({ user, darkMode, onAvatarChange }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: user.name,
@@ -196,21 +204,13 @@ const ProfilePage = ({ user, darkMode }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, avatar: reader.result }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsEditing(false);
-    // Here you would typically send the data to your backend
+    // Update the avatar in parent component and localStorage
+    if (onAvatarChange) {
+      onAvatarChange(formData.avatar);
+    }
   };
 
   return (
@@ -220,26 +220,37 @@ const ProfilePage = ({ user, darkMode }) => {
           <div className="flex items-start gap-6">
             <div className="relative">
               <img 
-                src={formData.avatar} 
+                src={formData.avatar || `https://api.dicebear.com/8.x/bottts/svg?seed=${encodeURIComponent(formData.name || 'user')}`}
                 alt={formData.name} 
-                className="w-24 h-24 rounded-full object-cover"
+                className="w-24 h-24 rounded-full object-cover cursor-pointer"
+                onClick={() => setIsEditing(!isEditing)}
+                onError={(e) => {
+                  e.target.src = `https://api.dicebear.com/8.x/bottts/svg?seed=${encodeURIComponent(formData.name || 'user')}`;
+                }}
               />
               {isEditing && (
-                <>
-                  <input
-                    type="file"
-                    id="avatar-upload"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleAvatarChange}
+                <div className="absolute z-10 mt-2 w-64 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-xl border dark:border-gray-700">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-medium dark:text-white">Choose Avatar</h3>
+                    <button 
+                      type="button"
+                      onClick={() => setIsEditing(false)}
+                      className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <AvatarGenerator
+                    value={formData.avatar}
+                    onChange={(url) => {
+                      setFormData(prev => ({ ...prev, avatar: url }));
+                      if (onAvatarChange) {
+                        onAvatarChange(url);
+                      }
+                      setIsEditing(false);
+                    }}
                   />
-                  <label 
-                    htmlFor="avatar-upload"
-                    className="absolute bottom-0 right-0 p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors cursor-pointer"
-                  >
-                    <Camera className="w-4 h-4" />
-                  </label>
-                </>
+                </div>
               )}
             </div>
             
@@ -1157,11 +1168,19 @@ const SkillDecayApp = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [darkMode, setDarkMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Initialize avatar state with localStorage or default
+  const [avatar, setAvatar] = useState(() => {
+    const savedAvatar = localStorage.getItem('userAvatar');
+    return savedAvatar || mockData.user.avatar;
+  });
 
   const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    // Add dark mode class to body for global styling
-    if (!darkMode) {
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    // Update both localStorage and DOM class
+    localStorage.setItem('theme', newDarkMode ? 'dark' : 'light');
+    if (newDarkMode) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
@@ -1179,6 +1198,11 @@ const SkillDecayApp = () => {
     }
   }, []);
 
+  const handleAvatarChange = (newAvatar) => {
+    setAvatar(newAvatar);
+    localStorage.setItem('userAvatar', newAvatar); // Save to localStorage
+  };
+
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
   };
@@ -1186,26 +1210,32 @@ const SkillDecayApp = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard data={mockData} darkMode={darkMode} />;
+        return <Dashboard data={{...mockData, user: {...mockData.user, avatar}}} darkMode={darkMode} />;
       case 'learning':
         return <LearningPage darkMode={darkMode} />;
       case 'review':
-        return <ReviewPage data={mockData} darkMode={darkMode} />;
+        return <ReviewPage data={{...mockData, user: {...mockData.user, avatar}}} darkMode={darkMode} />;
       case 'analytics':
-        return <AnalyticsPage data={mockData} darkMode={darkMode} />;
+        return <AnalyticsPage data={{...mockData, user: {...mockData.user, avatar}}} darkMode={darkMode} />;
       case 'profile':
-        return <ProfilePage user={mockData.user} darkMode={darkMode} />;
+        return (
+          <ProfilePage 
+            user={{...mockData.user, avatar}} 
+            darkMode={darkMode} 
+            onAvatarChange={handleAvatarChange} 
+          />
+        );
       case 'integration':
         return <IntegrationPage darkMode={darkMode} />;
       default:
-        return <Dashboard data={mockData} darkMode={darkMode} />;
+        return <Dashboard data={{...mockData, user: {...mockData.user, avatar}}} darkMode={darkMode} />;
     }
   };
 
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <Header 
-        user={mockData.user} 
+        user={{...mockData.user, avatar}} 
         onSearch={handleSearch} 
         darkMode={darkMode}
         toggleDarkMode={toggleDarkMode}
