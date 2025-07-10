@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Brain, Calendar, TrendingUp, BookOpen, Settings, Bell, Search, User, Clock, Target, Zap, BarChart3, Map, Play, Sun, Moon, Edit, Mail, Phone, MapPin, Award, Camera, Plus, Filter, ChevronRight, Upload, Database, Code, Download, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
+import { Brain, Calendar, TrendingUp, BookOpen, Settings, Bell, Search, User, Clock, Target, Zap, BarChart3, Map, Play, Sun, Moon, Edit, Mail, Phone, MapPin, Award, Camera, Plus, Filter, ChevronRight, Upload, Database, Code, Download, CheckCircle, AlertCircle, XCircle, Github } from 'lucide-react';
 
 // Mock data for demonstration
 const mockData = {
@@ -143,9 +143,8 @@ const Sidebar = ({ activeTab, onTabChange, darkMode }) => {
     { id: 'learning', label: 'Learning', icon: BookOpen },
     { id: 'review', label: 'Review', icon: Target },
     { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-    { id: 'profile', label: 'Profile', icon: User },
     { id: 'integration', label: 'Integration', icon: Map },
-    { id: 'settings', label: 'Settings', icon: Settings }
+    { id: 'profile', label: 'Profile', icon: User },
   ];
 
   return (
@@ -181,120 +180,253 @@ const Sidebar = ({ activeTab, onTabChange, darkMode }) => {
 };
 
 // Profile Page Component
-const ProfilePage = ({ user, darkMode }) => (
-  <div className="space-y-6">
-    <Card className="p-6" darkMode={darkMode}>
-      <div className="flex items-start gap-6">
-        <div className="relative">
-          <img 
-            src={user.avatar} 
-            alt={user.name} 
-            className="w-24 h-24 rounded-full object-cover"
-          />
-          <button className="absolute bottom-0 right-0 p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors">
-            <Camera className="w-4 h-4" />
-          </button>
-        </div>
-        
-        <div className="flex-1">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{user.name}</h2>
-              <p className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Member since {user.joinDate}</p>
+const ProfilePage = ({ user, darkMode }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    name: user.name,
+    email: user.email,
+    bio: user.bio,
+    leetcode: '',
+    github: '',
+    avatar: user.avatar
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, avatar: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setIsEditing(false);
+    // Here you would typically send the data to your backend
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card className="p-6" darkMode={darkMode}>
+        <form onSubmit={handleSubmit}>
+          <div className="flex items-start gap-6">
+            <div className="relative">
+              <img 
+                src={formData.avatar} 
+                alt={formData.name} 
+                className="w-24 h-24 rounded-full object-cover"
+              />
+              {isEditing && (
+                <>
+                  <input
+                    type="file"
+                    id="avatar-upload"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarChange}
+                  />
+                  <label 
+                    htmlFor="avatar-upload"
+                    className="absolute bottom-0 right-0 p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors cursor-pointer"
+                  >
+                    <Camera className="w-4 h-4" />
+                  </label>
+                </>
+              )}
             </div>
-            <Button variant="secondary" darkMode={darkMode}>
-              <Edit className="w-4 h-4" />
-              Edit Profile
-            </Button>
+            
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-4">
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className={`text-2xl font-bold w-full p-2 rounded border ${
+                      darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-200 text-gray-900'
+                    }`}
+                  />
+                ) : (
+                  <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {formData.name}
+                  </h2>
+                )}
+                <Button 
+                  type={isEditing ? "submit" : "button"}
+                  variant="secondary" 
+                  onClick={isEditing ? null : () => setIsEditing(true)}
+                  darkMode={darkMode}
+                >
+                  {isEditing ? (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      Save
+                    </>
+                  ) : (
+                    <>
+                      <Edit className="w-4 h-4" />
+                      Edit Profile
+                    </>
+                  )}
+                </Button>
+              </div>
+              
+              {isEditing ? (
+                <textarea
+                  name="bio"
+                  value={formData.bio}
+                  onChange={handleChange}
+                  className={`w-full p-3 mb-4 rounded-lg border ${
+                    darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-200 text-gray-900'
+                  }`}
+                  rows="3"
+                />
+              ) : (
+                <p className={`mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {formData.bio}
+                </p>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex items-center gap-2">
+                  <Mail className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                  {isEditing ? (
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      className={`flex-1 p-2 rounded border ${
+                        darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-200 text-gray-900'
+                      }`}
+                    />
+                  ) : (
+                    <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                      {formData.email}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Github className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      name="github"
+                      value={formData.github}
+                      onChange={handleChange}
+                      placeholder="GitHub username"
+                      className={`flex-1 p-2 rounded border ${
+                        darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-200 text-gray-900'
+                      }`}
+                    />
+                  ) : (
+                    <a 
+                      href={`https://github.com/${formData.github}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className={`text-sm ${darkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
+                    >
+                      {formData.github || 'Not set'}
+                    </a>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Code className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      name="leetcode"
+                      value={formData.leetcode}
+                      onChange={handleChange}
+                      placeholder="LeetCode username"
+                      className={`flex-1 p-2 rounded border ${
+                        darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-200 text-gray-900'
+                      }`}
+                    />
+                  ) : (
+                    <a 
+                      href={`https://leetcode.com/${formData.leetcode}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className={`text-sm ${darkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}
+                    >
+                      {formData.leetcode || 'Not set'}
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
-          
-          <p className={`mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{user.bio}</p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center gap-2">
-              <Mail className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-              <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{user.email}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Phone className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-              <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{user.phone}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <MapPin className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-              <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{user.location}</span>
-            </div>
-          </div>
-        </div>
+        </form>
+      </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="p-6 text-center" darkMode={darkMode}>
+          <div className="text-3xl font-bold text-blue-600 mb-2">{user.totalReviews}</div>
+          <div className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Total Reviews</div>
+        </Card>
+        <Card className="p-6 text-center" darkMode={darkMode}>
+          <div className="text-3xl font-bold text-green-600 mb-2">{user.completedCourses}</div>
+          <div className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Completed Courses</div>
+        </Card>
+        <Card className="p-6 text-center" darkMode={darkMode}>
+          <div className="text-3xl font-bold text-purple-600 mb-2">{user.streak}</div>
+          <div className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Day Streak</div>
+        </Card>
       </div>
-    </Card>
 
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <Card className="p-6 text-center" darkMode={darkMode}>
-        <div className="text-3xl font-bold text-blue-600 mb-2">{user.totalReviews}</div>
-        <div className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Total Reviews</div>
-      </Card>
-      <Card className="p-6 text-center" darkMode={darkMode}>
-        <div className="text-3xl font-bold text-green-600 mb-2">{user.completedCourses}</div>
-        <div className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Completed Courses</div>
-      </Card>
-      <Card className="p-6 text-center" darkMode={darkMode}>
-        <div className="text-3xl font-bold text-purple-600 mb-2">{user.streak}</div>
-        <div className={`${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Day Streak</div>
-      </Card>
-    </div>
-
-    <Card className="p-6" darkMode={darkMode}>
-      <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Achievements</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {user.badges.map((badge, index) => (
-          <div key={index} className={`p-4 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} text-center`}>
-            <Award className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-            <h4 className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{badge}</h4>
-          </div>
-        ))}
-      </div>
-    </Card>
-
-    <Card className="p-6" darkMode={darkMode}>
-      <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Learning Preferences</h3>
-      <div className="space-y-4">
-        <div>
-          <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-            Preferred Learning Time
-          </label>
-          <select className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            darkMode 
-              ? 'bg-gray-700 border-gray-600 text-white' 
-              : 'bg-white border-gray-200 text-gray-900'
-          }`}>
-            <option>Morning (6AM - 12PM)</option>
-            <option>Afternoon (12PM - 6PM)</option>
-            <option>Evening (6PM - 12AM)</option>
-          </select>
-        </div>
-        
-        <div>
-          <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-            Daily Review Goal
-          </label>
-          <input
-            type="number"
-            defaultValue="10"
-            className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+      <Card className="p-6" darkMode={darkMode}>
+        <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Learning Preferences</h3>
+        <div className="space-y-4">
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              Preferred Learning Time
+            </label>
+            <select className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               darkMode 
                 ? 'bg-gray-700 border-gray-600 text-white' 
                 : 'bg-white border-gray-200 text-gray-900'
-            }`}
-          />
+            }`}>
+              <option>Morning (6AM - 12PM)</option>
+              <option>Afternoon (12PM - 6PM)</option>
+              <option>Evening (6PM - 12AM)</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              Daily Review Goal
+            </label>
+            <input
+              type="number"
+              defaultValue="10"
+              className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                darkMode 
+                  ? 'bg-gray-700 border-gray-600 text-white' 
+                  : 'bg-white border-gray-200 text-gray-900'
+              }`}
+            />
+          </div>
         </div>
-      </div>
-      
-      <div className="mt-6">
-        <Button variant="primary">Save Changes</Button>
-      </div>
-    </Card>
-  </div>
-);
+        
+        <div className="mt-6">
+          <Button variant="primary">Save Preferences</Button>
+        </div>
+      </Card>
+    </div>
+  );
+};
 
 // Knowledge Health Meter Component
 const KnowledgeHealthMeter = ({ score, streak, darkMode }) => (
@@ -534,81 +666,168 @@ const Dashboard = ({ data, darkMode }) => (
   </div>
 );
 
-// Learning Page Component
-const LearningPage = ({ darkMode }) => (
-  <div className="space-y-6">
-    <Card className="p-6" darkMode={darkMode}>
-      <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Learning Sources</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {['Coursera', 'YouTube', 'Medium', 'GitHub', 'Documentation'].map(source => (
-          <div key={source} className={`p-4 border rounded-lg text-center ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
-            <div className={`w-12 h-12 rounded-lg mx-auto mb-2 flex items-center justify-center ${darkMode ? 'bg-blue-900' : 'bg-blue-100'}`}>
-              <BookOpen className="w-6 h-6 text-blue-600" />
-            </div>
-            <h3 className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{source}</h3>
-            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Connect to import content</p>
-            <Button className="mt-2" size="sm" darkMode={darkMode}>
-              <Plus className="w-4 h-4" />
-              Connect
-            </Button>
-          </div>
-        ))}
-      </div>
-    </Card>
+//Learning Page Component
+const LearningPage = ({ darkMode }) => {
+  const [formData, setFormData] = useState({
+    topic: '',
+    tag: '',
+    notes: ''
+  });
 
-    <Card className="p-6" darkMode={darkMode}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Recent Learning</h3>
-        <Button variant="secondary" size="sm" darkMode={darkMode}>
-          <Filter className="w-4 h-4" />
-          Filter
-        </Button>
-      </div>
-      
-      <div className="space-y-4">
-        {[
-          { title: "Advanced React Patterns", source: "YouTube", date: "2 hours ago", progress: 75 },
-          { title: "Machine Learning Fundamentals", source: "Coursera", date: "1 day ago", progress: 45 },
-          { title: "Python Best Practices", source: "Medium", date: "2 days ago", progress: 100 }
-        ].map((item, index) => (
-          <div key={index} className={`flex items-center justify-between p-4 border rounded-lg ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
-            <div className="flex-1">
-              <h4 className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{item.title}</h4>
-              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{item.source} • {item.date}</p>
-              <div className={`mt-2 w-full ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-full h-2`}>
-                <div 
-                  className="bg-blue-500 h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${item.progress}%` }}
-                />
-              </div>
+  const [learningItems, setLearningItems] = useState([
+    { 
+      id: 1,
+      topic: "Advanced React Patterns", 
+      tag: "Programming", 
+      notes: "Learned about compound components",
+      date: "2 hours ago" 
+    },
+    { 
+      id: 2,
+      topic: "Machine Learning Fundamentals", 
+      tag: "AI/ML", 
+      notes: "Introduction to neural networks",
+      date: "1 day ago" 
+    }
+  ]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.topic.trim()) return;
+    
+    const newItem = {
+      id: Date.now(),
+      topic: formData.topic,
+      tag: formData.tag,
+      notes: formData.notes,
+      date: new Date().toLocaleTimeString() + ' today'
+    };
+    
+    setLearningItems([newItem, ...learningItems]);
+    setFormData({ topic: '', tag: '', notes: '' });
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Learning Input Form */}
+      <Card className="p-6" darkMode={darkMode}>
+        <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+          Add What You Learned
+        </h2>
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Topic*
+              </label>
+              <input
+                type="text"
+                name="topic"
+                value={formData.topic}
+                onChange={handleChange}
+                required
+                className={`w-full border rounded-lg px-3 py-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                placeholder="What did you learn?"
+              />
             </div>
+            
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Tag/Pattern
+              </label>
+              <input
+                type="text"
+                name="tag"
+                value={formData.tag}
+                onChange={handleChange}
+                className={`w-full border rounded-lg px-3 py-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                placeholder="Category or pattern"
+              />
+            </div>
+            
+            <div>
+              <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Notes
+              </label>
+              <input
+                type="text"
+                name="notes"
+                value={formData.notes}
+                onChange={handleChange}
+                className={`w-full border rounded-lg px-3 py-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-200 text-gray-900'}`}
+                placeholder="Key takeaways"
+              />
+            </div>
+          </div>
+          
+          <Button type="submit" variant="primary" className="w-full md:w-auto">
+            Add Learning Item
+          </Button>
+        </form>
+      </Card>
+
+      {/* Recent Learning List */}
+      <Card className="p-6" darkMode={darkMode}>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+            Your Learning History
+          </h3>
+          <div className="flex items-center gap-2">
             <Button variant="secondary" size="sm" darkMode={darkMode}>
-              <ChevronRight className="w-4 h-4" />
+              <Filter className="w-4 h-4" />
+              Filter
             </Button>
           </div>
-        ))}
-      </div>
-    </Card>
-
-    <Card className="p-6" darkMode={darkMode}>
-      <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Upload Learning Materials</h3>
-      <div className={`border-2 border-dashed rounded-lg p-8 text-center ${darkMode ? 'border-gray-600' : 'border-gray-300'}`}>
-        <Upload className={`w-12 h-12 mx-auto mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-400'}`} />
-        <p className={`mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-          Drag and drop your files here, or click to browse
-        </p>
-        <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-          Supports PDF, DOCX, TXT, and more
-        </p>
-        <Button className="mt-4">
-          <Upload className="w-4 h-4" />
-          Choose Files
-        </Button>
-      </div>
-    </Card>
-  </div>
-);
-
+        </div>
+        
+        <div className="space-y-3">
+          {learningItems.length > 0 ? (
+            learningItems.map(item => (
+              <div 
+                key={item.id} 
+                className={`p-4 border rounded-lg ${darkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-200 bg-gray-50'}`}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h4 className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {item.topic}
+                    </h4>
+                    {item.tag && (
+                      <span className={`inline-block px-2 py-1 text-xs rounded-full mt-1 ${
+                        darkMode ? 'bg-gray-700 text-blue-400' : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {item.tag}
+                      </span>
+                    )}
+                  </div>
+                  <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {item.date}
+                  </span>
+                </div>
+                
+                {item.notes && (
+                  <p className={`mt-2 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    {item.notes}
+                  </p>
+                )}
+              </div>
+            ))
+          ) : (
+            <div className={`text-center py-8 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              <BookOpen className="w-8 h-8 mx-auto mb-2" />
+              <p>No learning items recorded yet</p>
+            </div>
+          )}
+        </div>
+      </Card>
+    </div>
+  );
+};
 // Review Page Component
 const ReviewPage = ({ data, darkMode }) => {
   const [currentReview, setCurrentReview] = useState(null);
@@ -822,208 +1041,116 @@ const AnalyticsPage = ({ data, darkMode }) => (
   </div>
 );
 
-// Integration Page Component
-const IntegrationPage = ({ darkMode }) => (
-  <div className="space-y-6">
-    <Card className="p-6" darkMode={darkMode}>
-      <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Connected Integrations</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {[
-          { name: "Notion", icon: Database, status: "connected", description: "Sync your notes and documents" },
-          { name: "GitHub", icon: Code, status: "connected", description: "Track your coding projects" },
-          { name: "Obsidian", icon: Brain, status: "disconnected", description: "Import your knowledge graph" },
-          { name: "Anki", icon: Target, status: "disconnected", description: "Sync flashcards and reviews" }
-        ].map((integration, index) => (
-          <div key={index} className={`p-4 border rounded-lg ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                  <integration.icon className={`w-5 h-5 ${darkMode ? 'text-white' : 'text-gray-600'}`} />
-                </div>
-                <div>
-                  <h3 className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{integration.name}</h3>
-                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{integration.description}</p>
-                </div>
-              </div>
-              <span className={`px-2 py-1 text-xs rounded-full ${
-                integration.status === 'connected' 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-gray-100 text-gray-800'
-              }`}>
-                {integration.status}
-              </span>
-            </div>
-            <Button 
-              variant={integration.status === 'connected' ? 'secondary' : 'primary'} 
-              size="sm"
-              darkMode={darkMode}
-            >
-              {integration.status === 'connected' ? 'Configure' : 'Connect'}
-            </Button>
-          </div>
-        ))}
-      </div>
-    </Card>
+// Minimal IntegrationPage Component
+const IntegrationPage = ({ darkMode }) => {
+  const [integrations, setIntegrations] = useState([
+    { name: "Notion", connected: false, icon: Database, description: "Sync your notes" },
+    { name: "File Upload", connected: false, icon: Upload, description: "PDFs & Markdown" }
+  ]);
 
-    <Card className="p-6" darkMode={darkMode}>
-      <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>API Access</h3>
-      <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h4 className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>API Key</h4>
-            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Use this key to access the SkillDecay API</p>
-          </div>
-          <Button variant="secondary" size="sm" darkMode={darkMode}>
-            <Download className="w-4 h-4" />
-            Generate
-          </Button>
-        </div>
-        <div className={`p-3 rounded border font-mono text-sm ${darkMode ? 'bg-gray-800 border-gray-600 text-gray-300' : 'bg-white border-gray-200 text-gray-700'}`}>
-          sk-1234567890abcdef...
-        </div>
-      </div>
-    </Card>
+  const [apiKey, setApiKey] = useState("sk-... (generate to reveal)");
+  const [showKey, setShowKey] = useState(false);
 
-    <Card className="p-6" darkMode={darkMode}>
-      <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Export Data</h3>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between p-4 border rounded-lg">
-          <div>
-            <h4 className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>Learning Data</h4>
-            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Export all your learning progress and reviews</p>
-          </div>
-          <Button variant="secondary" size="sm" darkMode={darkMode}>
-            <Download className="w-4 h-4" />
-            Export JSON
-          </Button>
-        </div>
-        <div className="flex items-center justify-between p-4 border rounded-lg">
-          <div>
-            <h4 className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>Knowledge Graph</h4>
-            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Export your knowledge connections and strengths</p>
-          </div>
-          <Button variant="secondary" size="sm" darkMode={darkMode}>
-            <Download className="w-4 h-4" />
-            Export CSV
-          </Button>
-        </div>
-      </div>
-    </Card>
-  </div>
-);
+  const toggleConnection = (name) => {
+    setIntegrations(integrations.map(item => 
+      item.name === name 
+        ? { ...item, connected: !item.connected } 
+        : item
+    ));
+  };
 
-// Settings Page Component
-const SettingsPage = ({ darkMode, toggleDarkMode }) => (
-  <div className="space-y-6">
-    <Card className="p-6" darkMode={darkMode}>
-      <h2 className={`text-xl font-semibold mb-6 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Preferences</h2>
-      
-      <div className="space-y-6">
-        <div>
-          <h3 className={`text-lg font-medium mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Appearance</h3>
-          <div className="flex items-center justify-between">
-            <div>
-              <p className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>Dark Mode</p>
-              <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Toggle between light and dark themes</p>
-            </div>
-            <button
-              onClick={toggleDarkMode}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                darkMode ? 'bg-blue-600' : 'bg-gray-200'
+  const generateApiKey = () => {
+    setApiKey(`sk-${Math.random().toString(36).slice(2, 18)}`);
+    setShowKey(true);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Integrations Card */}
+      <Card className="p-6" darkMode={darkMode}>
+        <h2 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+          Connect Knowledge Sources
+        </h2>
+        
+        <div className="space-y-4">
+          {integrations.map((item, index) => (
+            <div 
+              key={index} 
+              className={`flex items-center justify-between p-4 rounded-lg border ${
+                darkMode ? 'border-gray-600' : 'border-gray-200'
               }`}
             >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  darkMode ? 'translate-x-6' : 'translate-x-1'
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg ${
+                  darkMode ? 'bg-gray-700' : 'bg-gray-100'
+                }`}>
+                  <item.icon className={`w-5 h-5 ${
+                    darkMode ? 'text-blue-400' : 'text-blue-600'
+                  }`} />
+                </div>
+                <div>
+                  <h3 className={`font-medium ${
+                    darkMode ? 'text-white' : 'text-gray-900'
+                  }`}>{item.name}</h3>
+                  <p className={`text-sm ${
+                    darkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>{item.description}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => toggleConnection(item.name)}
+                className={`px-3 py-1 text-sm rounded-md ${
+                  item.connected
+                    ? darkMode 
+                      ? 'bg-gray-700 text-gray-300' 
+                      : 'bg-gray-100 text-gray-800'
+                    : 'bg-blue-600 text-white'
                 }`}
-              />
+              >
+                {item.connected ? 'Connected' : 'Connect'}
+              </button>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* API Access Card */}
+      <Card className="p-6" darkMode={darkMode}>
+        <h3 className={`text-lg font-semibold mb-4 ${
+          darkMode ? 'text-white' : 'text-gray-900'
+        }`}>Developer Access</h3>
+        
+        <div className={`p-4 rounded-lg ${
+          darkMode ? 'bg-gray-700' : 'bg-gray-50'
+        }`}>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h4 className={`font-medium ${
+                darkMode ? 'text-white' : 'text-gray-900'
+              }`}>API Key</h4>
+              <p className={`text-sm ${
+                darkMode ? 'text-gray-400' : 'text-gray-500'
+              }`}>For custom integrations</p>
+            </div>
+            <button
+              onClick={generateApiKey}
+              className={`px-3 py-1 text-sm rounded-md ${
+                darkMode ? 'bg-gray-600 text-white' : 'bg-gray-200 text-gray-800'
+              }`}
+            >
+              Generate
             </button>
           </div>
-        </div>
-
-        <div>
-          <h3 className={`text-lg font-medium mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Notifications</h3>
-          <div className="space-y-4">
-            {[
-              { label: "Review Reminders", description: "Get notified when reviews are due" },
-              { label: "Daily Summary", description: "Receive daily progress summaries" },
-              { label: "Achievement Alerts", description: "Celebrate your learning milestones" }
-            ].map((setting, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <div>
-                  <p className={`font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>{setting.label}</p>
-                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{setting.description}</p>
-                </div>
-                <button className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  darkMode ? 'bg-blue-600' : 'bg-gray-200'
-                }`}>
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    darkMode ? 'translate-x-6' : 'translate-x-1'
-                  }`} />
-                </button>
-              </div>
-            ))}
+          <div className={`p-3 rounded border font-mono text-sm ${
+            darkMode ? 'bg-gray-800 border-gray-600 text-gray-300' : 'bg-white border-gray-200 text-gray-700'
+          }`}>
+            {showKey ? apiKey : "sk-••••••••••••••••"}
           </div>
         </div>
-
-        <div>
-          <h3 className={`text-lg font-medium mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Learning</h3>
-          <div className="space-y-4">
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                Daily Review Goal
-              </label>
-              <input
-                type="number"
-                defaultValue="10"
-                className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  darkMode 
-                    ? 'bg-gray-700 border-gray-600 text-white' 
-                    : 'bg-white border-gray-200 text-gray-900'
-                }`}
-              />
-            </div>
-            
-            <div>
-              <label className={`block text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                Review Difficulty
-              </label>
-              <select className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                darkMode 
-                  ? 'bg-gray-700 border-gray-600 text-white' 
-                  : 'bg-white border-gray-200 text-gray-900'
-              }`}>
-                <option>Adaptive (Recommended)</option>
-                <option>Easy</option>
-                <option>Medium</option>
-                <option>Hard</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div className="mt-8 pt-6 border-t">
-        <Button variant="primary">Save Settings</Button>
-      </div>
-    </Card>
-
-    <Card className="p-6" darkMode={darkMode}>
-      <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Account</h3>
-      <div className="space-y-4">
-        <Button variant="secondary" darkMode={darkMode}>
-          Change Password
-        </Button>
-        <Button variant="secondary" darkMode={darkMode}>
-          Download My Data
-        </Button>
-        <Button variant="secondary" className="text-red-600 hover:text-red-700">
-          Delete Account
-        </Button>
-      </div>
-    </Card>
-  </div>
-);
+      </Card>
+    </div>
+  );
+};
 
 // Main App Component
 const SkillDecayApp = () => {
@@ -1070,8 +1197,6 @@ const SkillDecayApp = () => {
         return <ProfilePage user={mockData.user} darkMode={darkMode} />;
       case 'integration':
         return <IntegrationPage darkMode={darkMode} />;
-      case 'settings':
-        return <SettingsPage darkMode={darkMode} toggleDarkMode={toggleDarkMode} />;
       default:
         return <Dashboard data={mockData} darkMode={darkMode} />;
     }
