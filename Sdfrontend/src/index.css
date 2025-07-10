@@ -1,0 +1,7 @@
+@import 'tailwindcss';
+
+/* Remove all the custom styles that override Tailwind */
+/* Keep only this for smooth transitions */
+* {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
